@@ -1,8 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const getClient = () => {
-    // Vite 환경에 맞는 환경변수 호출 방식으로 변경했습니다.
-    const apiKey = import.meta.env.VITE_GOOGLE_GENAI_API_KEY;
+    // 1. Vite 환경과 일반 환경 모두 대응하도록 수정했습니다.
+    const apiKey = import.meta.env?.VITE_GOOGLE_GENAI_API_KEY || process.env.API_KEY;
+    
     if (!apiKey) {
         throw new Error("API Key not found");
     }
@@ -12,7 +13,7 @@ const getClient = () => {
 export const generateBlogPostContent = async (topic: string, tone: string): Promise<{ title: string; content: string; tags: string[] }> => {
     try {
         const genAI = getClient();
-        // 안정적인 모델명으로 변경했습니다.
+        // 2. 모델명을 가장 안정적인 1.5-flash로 고정했습니다.
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         
         const prompt = `
