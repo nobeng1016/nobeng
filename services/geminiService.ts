@@ -1,17 +1,19 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const getClient = () => {
-    const apiKey = process.env.API_KEY;
+    // Vite 환경에 맞는 환경변수 호출 방식으로 변경했습니다.
+    const apiKey = import.meta.env.VITE_GOOGLE_GENAI_API_KEY;
     if (!apiKey) {
         throw new Error("API Key not found");
     }
-    return new GoogleGenAI({ apiKey });
+    return new GoogleGenerativeAI(apiKey);
 };
 
 export const generateBlogPostContent = async (topic: string, tone: string): Promise<{ title: string; content: string; tags: string[] }> => {
     try {
-        const ai = getClient();
-        const model = 'gemini-3-flash-preview';
+        const genAI = getClient();
+        // 안정적인 모델명으로 변경했습니다.
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         
         const prompt = `
         Write a blog post about "${topic}" with a ${tone} tone.
@@ -24,15 +26,10 @@ export const generateBlogPostContent = async (topic: string, tone: string): Prom
         Do not include markdown code blocks (like \`\`\`json) in the response, just the raw JSON string.
         `;
 
-        const response = await ai.models.generateContent({
-            model,
-            contents: prompt,
-            config: {
-                responseMimeType: "application/json"
-            }
-        });
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
 
-        const text = response.text;
         if (!text) {
             throw new Error("No response from Gemini");
         }
